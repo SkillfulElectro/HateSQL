@@ -1,5 +1,6 @@
 #include <iostream>
 #include "headers/HateSQL_vector.h"
+#include <vector>
 
 struct RandomObj
 {
@@ -10,19 +11,29 @@ struct RandomObj
 int main()
 {
     HateSQL::Vector<int> vec;
-    vec.open("test.db");
+    
 
-    vec.push_back(1);
-    vec.push_back(2);
-    vec.push_back(3);
-    vec.push_back(4);
+    if (vec.exists("test.db") == HateSQL::HATESQL_VECTOR_EXISTS) {
+        vec.open("test.db");
 
-    vec.erase(0 , 2);
+        
+    } else {
+        vec.open("test.db");
+
+        for (int i = 0 ; i < 5 ; ++i) {
+            vec.push_back(i);
+        }
+
+        
+    }
+
+    vec.insert(vec.size() - 1 , 10);
 
     for (size_t i = 0 ; i < vec.size() ; ++i) {
-        std::cout << vec.at(i) << "\n";
+        std::cout << vec.at_const(i) << "\n";
     }
 
     vec.close();
+
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdio>
+#include <string>
 
 namespace HateSQL
 {
@@ -23,7 +24,6 @@ namespace HateSQL
         int file_type_name;
     };
 
-
     template <typename Value>
     class Vector
     {
@@ -32,8 +32,9 @@ namespace HateSQL
         std::string file_name;
 
     private:
-        struct VectorValueKeeper {
-            bool modified = true;
+        struct VectorValueKeeper
+        {
+            bool modified = false;
             size_t index = 0;
             Value result;
         };
@@ -41,26 +42,30 @@ namespace HateSQL
         VectorValueKeeper return_result;
 
         /// writes changes to return_result to the db file
-        void set_return_result_to_file() {
-            if (!file.is_open()) {
+        void set_return_result_to_file()
+        {
+            if (!file.is_open())
+            {
                 return;
             }
 
-            if (return_result.modified != true) {
-                file.seekp(return_result.index * sizeof(Value) , std::ios::beg);
-                file.write(reinterpret_cast<const char*>(&return_result.result) , sizeof(Value));
-                return_result.modified = true;
+            if (return_result.modified)
+            {
+                file.seekp(return_result.index * sizeof(Value), std::ios::beg);
+                file.write(reinterpret_cast<const char *>(&return_result.result), sizeof(Value));
+                return_result.modified = false;
             }
         }
+
     public:
         Vector()
         {
             footer.len = 0;
-            return_result.modified = true;
+            return_result.modified = false;
         }
 
         // check if db file exists
-        int exists(const std::string &file_name)
+        static int exists(const std::string &file_name)
         {
             auto tmp = std::fstream(file_name, std::ios::binary | std::ios::in | std::ios::out);
             VectorFooter tmp_footer;
@@ -149,7 +154,8 @@ namespace HateSQL
         }
 
         // reopen the db file -> writes changes to the file and opens it again
-        void update_db() {
+        void update_db()
+        {
             close();
             open(file_name);
         }
@@ -186,7 +192,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        /// erases from index start to end
+        // erases from index start to end
         int erase(size_t start, size_t end)
         {
             if (!file.is_open())
@@ -197,16 +203,19 @@ namespace HateSQL
             HateSQL::Vector<Value> tmp;
             tmp.open(file_name + ".tmp");
 
-            for (size_t i = end; i < size() ; ++i) {
-                tmp.push_back(at(i));
+            for (size_t i = end; i < size(); ++i)
+            {
+                tmp.push_back(at_const(i));
             }
 
-            for (; start != size() ;) {
+            for (; start != size();)
+            {
                 pop_back();
             }
 
-            for (size_t i = 0 ; i < tmp.size() ; ++i) {
-                push_back(tmp.at(i));
+            for (size_t i = 0; i < tmp.size(); ++i)
+            {
+                push_back(tmp.at_const(i));
             }
 
             tmp.close();
@@ -216,20 +225,65 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        /// returns modifiable Value at requested index
-        Value& at(size_t index)
+        // insert an element at specific index
+        int insert(size_t index, const Value &val)
         {
             if (!file.is_open())
             {
+                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
+            }
+
+            HateSQL::Vector<Value> tmp;
+            tmp.open(file_name + ".tmp");
+
+            for (size_t i = index; i < size(); ++i)
+            {
+                tmp.push_back(at_const(i));
+            }
+
+            while (size() > index)
+            {
+                pop_back();
+            }
+
+
+            push_back(val);
+
+
+            for (size_t i = 0; i < tmp.size(); ++i)
+            {
+                push_back(tmp.at_const(i));
+            }
+
+
+            tmp.close();
+
+            std::remove((file_name + ".tmp").c_str());
+
+            return HATESQL_VECTOR_SUCCESS;
+        }
+
+        /// returns constant ref to value at specific index
+        const Value &at_const(size_t index)
+        {
+            auto& val = at(index);
+            return_result.modified = false;
+
+            return val;
+        }
+
+        Value& at(size_t index) {
+            if (!file.is_open() && index > size())
+            {
                 return return_result.result;
             }
-            
+
             set_return_result_to_file();
 
             file.seekg(index * sizeof(Value), std::ios::beg);
             file.read(reinterpret_cast<char *>(&return_result.result), sizeof(Value));
 
-            return_result.modified = false;
+            return_result.modified = true;
             return_result.index = index;
 
             return return_result.result;
