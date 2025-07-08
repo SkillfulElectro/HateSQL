@@ -8,7 +8,7 @@ struct RandomObj {
 
 int main() {
     HateSQL::Stack<int> vec;
-    vec.open("goz.db");
+    vec.open("test.db");
 
 
 
