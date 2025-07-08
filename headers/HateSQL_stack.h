@@ -8,9 +8,9 @@
 
 namespace HateSQL {
     enum StackErrors {
-        HATESQL_VECTOR_SUCCESS = 0,
-        HATESQL_VECTOR_DB_IS_NOT_OPENED,
-        HATESQL_VECTOR_NOT_VECTOR_FILE,
+        HATESQL_STACK_SUCCESS = 0,
+        HATESQL_STACK_DB_IS_NOT_OPENED,
+        HATESQL_STACK_NOT_VECTOR_FILE,
     };
 
     struct StackFooter {
