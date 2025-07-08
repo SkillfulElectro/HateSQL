@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <cstdio>
 #include <string>
+#include <cstdlib>
 
 namespace HateSQL
 {
@@ -273,9 +274,16 @@ namespace HateSQL
         }
 
         Value& at(size_t index) {
-            if (!file.is_open() && index > size())
+            if (!file.is_open())
             {
-                return return_result.result;
+                std::cerr << "In SQLHate::Vector::at | SQLHate::Vector::at_const database file is not opened !\n";
+                std::abort();
+            }
+
+            if (index > size()) {
+                close();
+                std::cerr << "In SQLHate::Vector::at | SQLHate::Vector::at_const invalid index passed !\n";
+                std::abort();
             }
 
             set_return_result_to_file();
