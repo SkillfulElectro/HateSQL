@@ -12,7 +12,7 @@ namespace HateSQL
     {
         HATESQL_VECTOR_SUCCESS = 0,
         HATESQL_VECTOR_DB_IS_NOT_OPENED,
-        HATESQL_VECTOR_NOT_STACK_FILE,
+        HATESQL_VECTOR_NOT_VECTOR_FILE,
         HATESQL_VECTOR_EXISTS,
         HATESQL_VECTOR_DOES_NOT_EXISTS,
     };
@@ -40,6 +40,7 @@ namespace HateSQL
 
         VectorValueKeeper return_result;
 
+        /// writes changes to return_result to the db file
         void set_return_result_to_file() {
             if (!file.is_open()) {
                 return;
@@ -58,6 +59,7 @@ namespace HateSQL
             return_result.modified = true;
         }
 
+        // check if db file exists
         int exists(const std::string &file_name)
         {
             auto tmp = std::fstream(file_name, std::ios::binary | std::ios::in | std::ios::out);
@@ -83,7 +85,7 @@ namespace HateSQL
                 if ((tmp_footer.file_type_name !=
                      ('H' + 'a' + 't' + 'e' + 's' + 'q' + 'l' + 'v' + 'e' + 'c')))
                 {
-                    return HATESQL_VECTOR_NOT_STACK_FILE;
+                    return HATESQL_VECTOR_NOT_VECTOR_FILE;
                 }
 
                 return HATESQL_VECTOR_EXISTS;
@@ -92,6 +94,7 @@ namespace HateSQL
             return HATESQL_VECTOR_DOES_NOT_EXISTS;
         }
 
+        // closes prev open file , and opens new one
         int open(const std::string &file_name)
         {
             this->close();
@@ -122,7 +125,7 @@ namespace HateSQL
             break;
 
             default:
-                return HATESQL_VECTOR_NOT_STACK_FILE;
+                return HATESQL_VECTOR_NOT_VECTOR_FILE;
             }
 
             this->file_name = file_name;
@@ -130,6 +133,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
+        // writes changes to the db file and closes it
         void close()
         {
             if (file.is_open())
@@ -144,11 +148,13 @@ namespace HateSQL
             }
         }
 
+        // reopen the db file -> writes changes to the file and opens it again
         void update_db() {
             close();
             open(file_name);
         }
 
+        // pushes to the back of the vector
         int push_back(const Value &value)
         {
             if (!file.is_open())
@@ -163,6 +169,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
+        // pops from back of the vector
         int pop_back()
         {
             if (!file.is_open())
@@ -179,6 +186,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
+        /// erases from index start to end
         int erase(size_t start, size_t end)
         {
             if (!file.is_open())
@@ -208,6 +216,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
+        /// returns modifiable Value at requested index
         Value& at(size_t index)
         {
             if (!file.is_open())
@@ -226,11 +235,13 @@ namespace HateSQL
             return return_result.result;
         }
 
+        // returns len of the vector
         size_t size()
         {
             return footer.len;
         }
 
+        // cleanup
         ~Vector()
         {
             close();
