@@ -1,5 +1,5 @@
 #include <iostream>
-#include "headers/HateSQL_stack.h"
+#include "headers/HateSQL_vector.h"
 
 struct RandomObj
 {
@@ -9,7 +9,7 @@ struct RandomObj
 
 int main()
 {
-    HateSQL::Stack<int> vec;
+    HateSQL::Vector<int> vec;
     vec.open("test.db");
 
     vec.push_back(1);
@@ -17,7 +17,11 @@ int main()
     vec.push_back(3);
     vec.push_back(4);
 
-    std::cout << vec.size() << "\n";
+    vec.erase(0 , 2);
+
+    for (size_t i = 0 ; i < vec.size() ; ++i) {
+        std::cout << vec.at(i) << "\n";
+    }
 
     vec.close();
     return 0;
