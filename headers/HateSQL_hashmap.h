@@ -1,0 +1,115 @@
+#ifndef HATE_SQL_HASHMAP
+#define HATE_SQL_HASHMAP
+
+#include "HateSQL_vector.h"
+#include <string>
+#include <vector>
+
+namespace std {
+    template<>
+    struct hash<const char*> {
+        size_t operator()(const char* const &f) const noexcept {
+            return std::hash<string_view>{}(f);
+        }
+    };
+}
+
+namespace HateSQL {
+    template <typename Key, typename Value>
+    struct HashMapData {
+        Key key;
+        Value value;
+    };
+
+    struct HashMapKeyExistsResult {
+        bool exists;
+        size_t index;
+    };
+
+    enum HashMapErrors {
+        HATESQL_HASHMAP_KEY_NOT_FOUND = -10,
+    };
+
+    template <typename Key , typename Value>
+    class HashMap {
+        Vector<HashMapData<Key , Value>> vec;
+        std::hash<Key> hash_func;
+    public:
+
+        int open(const std::string& file_name) {
+            return vec.open(file_name);
+        }
+
+        void close() {
+            vec.close();
+        }
+
+        int insert(const Key& key , const Value& value) {
+            size_t index = hash_func(key);
+            return vec.insert(index , {key , value});
+        }
+
+        int remove(const Key& key) {
+            auto check_key = key_exists(key);
+
+            if (check_key.exists) {
+                return vec.erase(check_key.index , check_key.index + 1);
+            }
+
+            return HATESQL_HASHMAP_KEY_NOT_FOUND;
+        }
+
+        HashMapKeyExistsResult key_exists(const Key& key) {
+            size_t index = 0;
+            
+            if (vec.size() != 0) {
+                size_t index = (hash_func(key) % vec.size());
+            }
+
+            for (size_t i = index ; i < vec.size() ; ++i) {
+                auto& val = vec.at_const(i);
+                if (val.key == key) {
+                    return {true , i};
+                }
+            }
+
+            for (size_t i = 0 ; i < index ; ++i) {
+                auto& val = vec.at_const(i);
+                if (val.key == key) {
+                    return {true , i};
+                }
+            }
+
+            return {false , 0};
+        }
+
+        int set(const Key& key , const Value& value) {
+            auto check_key = key_exists(key);
+
+            if (check_key.exists) {
+                at(check_key.index).value = value;
+
+                return HATESQL_VECTOR_SUCCESS;
+            }
+
+            return HATESQL_HASHMAP_KEY_NOT_FOUND;
+        }
+
+        int get(const Key& key , Value& return_result) {
+            auto check_key = key_exists(key);
+
+            if (check_key.exists) {
+                return_result = vec.at_const(check_key.index).value;
+                return HATESQL_VECTOR_SUCCESS;
+            }
+
+            return HATESQL_HASHMAP_KEY_NOT_FOUND;
+        }
+
+        Vector<HashMapData<Key , Value>>& get_the_underlying_vector() {
+            return vec;
+        }
+    };
+}
+
+#endif // HATE_SQL_HASHMAP

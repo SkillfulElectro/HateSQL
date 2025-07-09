@@ -1,39 +1,46 @@
 #include <iostream>
+#include <string>
 #include "headers/HateSQL_vector.h"
-#include <vector>
-
-struct RandomObj
-{
-    int num;
-    const char *var;
-};
+#include "headers/HateSQL_hashmap.h"
 
 int main()
 {
+    // --- VECTOR TEST ---
+    const std::string vec_file = "vec_test.db";
     HateSQL::Vector<int> vec;
-    
 
-    if (vec.exists("test.db") == HateSQL::HATESQL_VECTOR_EXISTS) {
-        vec.open("test.db");
-
-        
-    } else {
-        vec.open("test.db");
-
-        for (int i = 0 ; i < 5 ; ++i) {
+    if (HateSQL::Vector<int>::exists(vec_file) == HateSQL::HATESQL_VECTOR_EXISTS) {
+        vec.open(vec_file);
+    }
+    else {
+        vec.open(vec_file);
+        for (int i = 0; i < 5; ++i) {
             vec.push_back(i);
         }
-
-        
     }
 
-    vec.insert(vec.size() - 1 , 10);
+    // insert 99 at index 2
+    vec.insert(2, 99);
 
-    for (size_t i = 0 ; i < vec.size() ; ++i) {
-        std::cout << vec.at_const(i) << "\n";
+    std::cout << "Vector contents: ";
+    for (size_t i = 0; i < vec.size(); ++i) {
+        std::cout << vec.at_const(i) << (i + 1 < vec.size() ? ", " : "\n");
     }
-
     vec.close();
+
+    HateSQL::HashMap<const char* , int> map;
+    map.open("hashmap.db");
+
+    map.insert("shahin" , 10);
+    map.insert("mani" , 2);
+
+    int shahin;
+    int mani;
+
+    map.get("shahin" , shahin);
+    map.get("mani" , mani);
+
+    std::cout << shahin << " , " << mani << "\n";
 
     return 0;
 }

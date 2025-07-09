@@ -13,10 +13,10 @@ namespace HateSQL
     enum VectorErrors
     {
         HATESQL_VECTOR_SUCCESS = 0,
-        HATESQL_VECTOR_DB_IS_NOT_OPENED,
-        HATESQL_VECTOR_NOT_VECTOR_FILE,
-        HATESQL_VECTOR_EXISTS,
-        HATESQL_VECTOR_DOES_NOT_EXISTS,
+        HATESQL_VECTOR_DB_IS_NOT_OPENED = -1,
+        HATESQL_VECTOR_NOT_VECTOR_FILE = -2,
+        HATESQL_VECTOR_EXISTS = -3,
+        HATESQL_VECTOR_DOES_NOT_EXISTS = -4,
     };
 
     struct VectorFooter
@@ -28,11 +28,12 @@ namespace HateSQL
     template <typename Value>
     class Vector
     {
+    protected:
         VectorFooter footer;
         std::fstream file;
         std::string file_name;
 
-    private:
+    protected:
         struct VectorValueKeeper
         {
             bool modified = false;
@@ -201,7 +202,7 @@ namespace HateSQL
             }
 
             HateSQL::Vector<Value> tmp;
-            tmp.open(file_name + ".tmp");
+            tmp.open(file_name + ".erase");
 
             for (size_t i = end; i < size(); ++i)
             {
@@ -220,7 +221,7 @@ namespace HateSQL
 
             tmp.close();
 
-            std::remove((file_name + ".tmp").c_str());
+            std::remove((file_name + ".erase").c_str());
 
             return HATESQL_VECTOR_SUCCESS;
         }
@@ -234,7 +235,7 @@ namespace HateSQL
             }
 
             HateSQL::Vector<Value> tmp;
-            tmp.open(file_name + ".tmp");
+            tmp.open(file_name + ".insert");
 
             for (size_t i = index; i < size(); ++i)
             {
@@ -258,7 +259,7 @@ namespace HateSQL
 
             tmp.close();
 
-            std::remove((file_name + ".tmp").c_str());
+            std::remove((file_name + ".insert").c_str());
 
             return HATESQL_VECTOR_SUCCESS;
         }
@@ -302,6 +303,9 @@ namespace HateSQL
             return footer.len;
         }
 
+        const std::string& get_file_name() {
+            return file_name;
+        }
         // cleanup
         ~Vector()
         {
