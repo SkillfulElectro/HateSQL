@@ -4,8 +4,6 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <cstdio>
-#include <string>
 #include <cstdlib>
 
 namespace HateSQL
