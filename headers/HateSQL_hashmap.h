@@ -3,6 +3,10 @@
 
 #include "HateSQL_vector.h"
 
+/*
+HateSQL::HashMap is just wrapper on top of HateSQL::Vector
+*/
+
 namespace std
 {
     template <size_t N>
