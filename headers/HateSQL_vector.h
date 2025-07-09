@@ -22,7 +22,7 @@ namespace HateSQL
     struct VectorFooter
     {
         size_t len;
-        int file_type_name;
+        size_t file_type_name;
     };
 
     template <typename Value>
@@ -88,8 +88,7 @@ namespace HateSQL
                 tmp.read(reinterpret_cast<char *>(&tmp_footer), sizeof(VectorFooter));
                 tmp.close();
 
-                if ((tmp_footer.file_type_name !=
-                     ('H' + 'a' + 't' + 'e' + 's' + 'q' + 'l' + 'v' + 'e' + 'c')))
+                if (tmp_footer.file_type_name != std::hash<std::string>()("HateSQL_vector_file"))
                 {
                     return HATESQL_VECTOR_NOT_VECTOR_FILE;
                 }
@@ -126,7 +125,7 @@ namespace HateSQL
                 file.close();
                 file.open(file_name + ".body", std::ios::binary | std::ios::in | std::ios::out);
                 footer.len = 0;
-                footer.file_type_name = ('H' + 'a' + 't' + 'e' + 's' + 'q' + 'l' + 'v' + 'e' + 'c');
+                footer.file_type_name = std::hash<std::string>()("HateSQL_vector_file");
             }
             break;
 
