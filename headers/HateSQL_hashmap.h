@@ -147,7 +147,7 @@ namespace HateSQL
             {
                 HashMapData<Value> map_result;
                 vec.get(check_key.index , map_result);
-                map_result.value = value;
+                map_result.value = new_value;
 
                 return vec.set(check_key.index , map_result);
             }

@@ -288,6 +288,41 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
+        // start from index and fill the buffer
+        int buffered_get(size_t index , Value* buffer , size_t buffer_size) {
+            if (!file.is_open())
+            {
+                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
+            }
+
+            if (index > size()) {
+                return HATESQL_VECTOR_INVALID_INDEX_PASSED;
+            }
+
+            file.seekg(index * sizeof(Value), std::ios::beg);
+            file.read(reinterpret_cast<char *>(buffer), sizeof(Value) * buffer_size);
+
+            return HATESQL_VECTOR_SUCCESS;
+        }
+
+        // start from index and set buffer values
+        int buffered_set(size_t index , Value* buffer , size_t buffer_size) {
+            if (!file.is_open())
+            {
+                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
+            }
+
+            if (index > size()) {
+                return HATESQL_VECTOR_INVALID_INDEX_PASSED;
+            }
+
+            file.seekp(index * sizeof(Value), std::ios::beg);
+            file.write(reinterpret_cast<const char *>(buffer), sizeof(Value) * buffer_size);
+
+
+            return HATESQL_VECTOR_SUCCESS;
+        }
+
         // returns len of the vector
         size_t size()
         {
@@ -298,7 +333,7 @@ namespace HateSQL
         const std::string& get_file_name() {
             return file_name;
         }
-        
+
         // cleanup
         ~Vector()
         {
