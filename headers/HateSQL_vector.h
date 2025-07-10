@@ -15,6 +15,7 @@ namespace HateSQL
         HATESQL_VECTOR_NOT_VECTOR_FILE = -2,
         HATESQL_VECTOR_EXISTS = -3,
         HATESQL_VECTOR_DOES_NOT_EXISTS = -4,
+        HATESQL_VECTOR_INVALID_INDEX_PASSED = -5,
     };
 
     struct VectorFooter
@@ -31,37 +32,10 @@ namespace HateSQL
         std::fstream file;
         std::string file_name;
 
-    protected:
-        struct VectorValueKeeper
-        {
-            bool modified = false;
-            size_t index = 0;
-            Value result;
-        };
-
-        VectorValueKeeper return_result;
-
-        /// writes changes to return_result to the db file
-        void set_return_result_to_file()
-        {
-            if (!file.is_open())
-            {
-                return;
-            }
-
-            if (return_result.modified)
-            {
-                file.seekp(return_result.index * sizeof(Value), std::ios::beg);
-                file.write(reinterpret_cast<const char *>(&return_result.result), sizeof(Value));
-                return_result.modified = false;
-            }
-        }
-
     public:
         Vector()
         {
             footer.len = 0;
-            return_result.modified = false;
         }
 
         // check if db file exists
@@ -142,7 +116,6 @@ namespace HateSQL
         {
             if (file.is_open())
             {
-                set_return_result_to_file();
                 file.seekp(0, std::ios::end);
                 file.write(reinterpret_cast<const char *>(&footer), sizeof(VectorFooter));
                 footer.len = 0;
@@ -153,7 +126,7 @@ namespace HateSQL
         }
 
         // reopen the db file -> writes changes to the file and opens it again
-        void update_db()
+        void reopen()
         {
             close();
             open(file_name);
@@ -204,7 +177,9 @@ namespace HateSQL
 
             for (size_t i = end; i < size(); ++i)
             {
-                tmp.push_back(at_const(i));
+                Value tmp_value;
+                get(i , tmp_value);
+                tmp.push_back(tmp_value);
             }
 
             for (; start != size();)
@@ -214,7 +189,9 @@ namespace HateSQL
 
             for (size_t i = 0; i < tmp.size(); ++i)
             {
-                push_back(tmp.at_const(i));
+                Value tmp_value;
+                tmp.get(i , tmp_value);
+                push_back(tmp_value);
             }
 
             tmp.close();
@@ -224,7 +201,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        // insert an element at specific index
+        // insert an element set specific index
         int insert(size_t index, const Value &val)
         {
             if (!file.is_open())
@@ -237,7 +214,10 @@ namespace HateSQL
 
             for (size_t i = index; i < size(); ++i)
             {
-                tmp.push_back(at_const(i));
+
+                Value tmp_value;
+                get(i , tmp_value);
+                tmp.push_back(tmp_value);
             }
 
             while (size() > index)
@@ -251,7 +231,9 @@ namespace HateSQL
 
             for (size_t i = 0; i < tmp.size(); ++i)
             {
-                push_back(tmp.at_const(i));
+                Value tmp_value;
+                tmp.get(i , tmp_value);
+                push_back(tmp_value);
             }
 
 
@@ -262,37 +244,47 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        /// returns constant ref to value at specific index
-        const Value &at_const(size_t index)
+        /// returns constant ref to value set specific index
+        int get(size_t index , Value& return_result)
         {
-            auto& val = at(index);
-            return_result.modified = false;
+            Value result;
 
-            return val;
-        }
-
-        Value& at(size_t index) {
             if (!file.is_open())
             {
-                std::cerr << "In SQLHate::Vector::at | SQLHate::Vector::at_const database file is not opened !\n";
-                std::abort();
+
+
+                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
             if (index > size()) {
-                close();
-                std::cerr << "In SQLHate::Vector::at | SQLHate::Vector::at_const invalid index passed !\n";
-                std::abort();
-            }
 
-            set_return_result_to_file();
+
+                return HATESQL_VECTOR_INVALID_INDEX_PASSED;
+            }
+            
 
             file.seekg(index * sizeof(Value), std::ios::beg);
-            file.read(reinterpret_cast<char *>(&return_result.result), sizeof(Value));
+            file.read(reinterpret_cast<char *>(&return_result), sizeof(Value));
 
-            return_result.modified = true;
-            return_result.index = index;
+            return HATESQL_VECTOR_SUCCESS;
+        }
 
-            return return_result.result;
+        int set(size_t index , const Value& new_value) {
+            if (!file.is_open())
+            {
+                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
+            }
+
+            if (index > size()) {
+                return HATESQL_VECTOR_INVALID_INDEX_PASSED;
+            }
+
+
+            file.seekp(index * sizeof(Value), std::ios::beg);
+            file.write(reinterpret_cast<const char *>(&new_value), sizeof(Value));
+
+
+            return HATESQL_VECTOR_SUCCESS;
         }
 
         // returns len of the vector

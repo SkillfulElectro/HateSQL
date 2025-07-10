@@ -27,7 +27,9 @@ int main()
 
 
     for (size_t i = 0 ; i < vec.size() ; ++i) {
-        std::cout << vec.at_const(i) << "\n";
+        char tmp[20];
+        vec.get(i , tmp);
+        std::cout << tmp << "\n";
     }
 
     vec.close();
@@ -47,11 +49,10 @@ int main()
     
 
 
-
-
-
     int shahin;
     int mani;
+
+    map.set(shah , 20);
 
     std::cout << "shahin found : " << map.get(shah , shahin) << "\n";
     std::cout << "mani found : " << map.get(man , mani) << "\n";

@@ -50,6 +50,7 @@ namespace HateSQL
         static int exists(const std::string &file_name) {
             return Vector<Value>::exists(file_name);
         }
+        
         int open(const std::string &file_name)
         {
             return vec.open(file_name);
@@ -98,7 +99,8 @@ namespace HateSQL
 
             for (size_t i = index; i < vec.size(); ++i)
             {
-                auto &val = vec.at_const(i);
+                HashMapData<Value> val;
+                vec.get(i , val);
 
                 
                 if (val.key == hash_func(key))
@@ -109,7 +111,8 @@ namespace HateSQL
 
             for (size_t i = 0; i < index; ++i)
             {
-                auto &val = vec.at_const(i);
+                HashMapData<Value> val;
+                vec.get(i , val);
 
                 
                 if (val.key == hash_func(key))
@@ -130,9 +133,11 @@ namespace HateSQL
 
             if (check_key.exists)
             {
-                at(check_key.index).value = value;
+                HashMapData<Value> map_result;
+                vec.get(check_key.index , map_result);
+                map_result.value = value;
 
-                return HATESQL_VECTOR_SUCCESS;
+                return vec.set(check_key.index , map_result);
             }
 
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
@@ -144,7 +149,11 @@ namespace HateSQL
 
             if (check_key.exists)
             {
-                return_result = vec.at_const(check_key.index).value;
+                HashMapData<Value> map_result;
+                vec.get(check_key.index , map_result);
+
+                return_result = map_result.value;
+
                 return HATESQL_VECTOR_SUCCESS;
             }
 
