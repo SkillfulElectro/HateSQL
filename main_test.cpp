@@ -3,46 +3,33 @@
 #include "headers/HateSQL_vector.h"
 #include "headers/HateSQL_hashmap.h"
 
-struct Char20 {
-    char data[20];
-};
 
 int main()
 {
     // --- VECTOR TEST ---
     const std::string vec_file = "str_vec_test.db";
-    HateSQL::Vector<Char20> vec;
+    HateSQL::Vector<int> vec;
 
 
 
-    if (HateSQL::Vector<char[20]>::exists(vec_file) == HateSQL::HATESQL_VECTOR_EXISTS) {
+    if (HateSQL::Vector<int>::exists(vec_file) == HateSQL::HATESQL_VECTOR_EXISTS) {
         vec.open(vec_file);
     } else {
         vec.open(vec_file);
 
-        vec.push_back({"hi"});
-        vec.push_back({"bye"});
+        for (int i = 0 ; i < 50 ; ++i) {
+            vec.push_back(i);
+        }
+
+        vec.buffered_erase(10 , 20 , 20);
     }
 
-
-    Char20* buffer = new Char20[vec.size()];
-
-    vec.buffered_get(0 , buffer, vec.size());
-
-    for (size_t i {0} ; i < vec.size() ; ++i) {
-        std::cout << buffer[i].data << i << " ";
-    }
-    std::cout << "\n";
-
-    buffer[0] = Char20{"boz"};
-    buffer[1] = Char20{"doz"};
-
-    vec.buffered_set(0 , buffer , vec.size());
+    
 
     for (size_t i = 0 ; i < vec.size() ; ++i) {
-        Char20 tmp;
+        int tmp;
         vec.get(i , tmp);
-        std::cout << tmp.data << "\n";
+        std::cout << i << " " << tmp << "\n";
     }
 
     vec.close();

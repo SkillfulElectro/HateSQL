@@ -135,27 +135,37 @@ namespace HateSQL
         // pushes value to the back of the vector
         int push_back(const Value &value)
         {
+            return buffered_push_back(&value , 1);
+        }
+
+        // pushing multiple values to the back of the vector        
+        int buffered_push_back(const Value* values , size_t values_len) {
             if (!file.is_open())
             {
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
             file.seekp(0, std::ios::end);
-            file.write(reinterpret_cast<const char *>(&value), sizeof(Value));
-            footer.len += 1;
+            file.write(reinterpret_cast<const char *>(values), sizeof(Value) * values_len);
+            footer.len += values_len;
 
             return HATESQL_VECTOR_SUCCESS;
-        }
+        } 
 
         // pops value from back of the vector
         int pop_back()
         {
+            return buffered_pop_back(1);
+        }
+
+        // poping multiple values from back of the vector
+        int buffered_pop_back(size_t pop_len) {
             if (!file.is_open())
             {
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
-            footer.len -= 1;
+            footer.len -= pop_len;
             file.close();
             std::filesystem::resize_file(file_name + ".body", footer.len * sizeof(Value));
 
@@ -167,36 +177,35 @@ namespace HateSQL
         // erases values from index start to end
         int erase(size_t start, size_t end)
         {
+            return buffered_erase(start , end , 1);
+        }
+
+        // erases values from index start to end , buffer_size is used for optimizing I/O ops
+        int buffered_erase(size_t start , size_t end , size_t buffer_size = 5) {
             if (!file.is_open())
             {
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
-            HateSQL::Vector<Value> tmp;
-            tmp.open(file_name + ".erase");
 
-            for (size_t i = end; i < size(); ++i)
+            Value* buffer = new Value[buffer_size];
+
+            size_t start_val_keeper = start;
+
+            for (size_t i = end; i < size();)
             {
-                Value tmp_value;
-                get(i , tmp_value);
-                tmp.push_back(tmp_value);
+                size_t len = (buffer_size > size() - i) ? size() - i : buffer_size;
+                buffered_get(i , buffer , len);
+                buffered_set(start , buffer , len);
+
+                start += len;
+                i += len;
             }
 
-            for (; start != size();)
-            {
-                pop_back();
-            }
+            buffered_pop_back(end - start_val_keeper);
 
-            for (size_t i = 0; i < tmp.size(); ++i)
-            {
-                Value tmp_value;
-                tmp.get(i , tmp_value);
-                push_back(tmp_value);
-            }
 
-            tmp.close();
-
-            std::remove((file_name + ".erase").c_str());
+            delete[] buffer;
 
             return HATESQL_VECTOR_SUCCESS;
         }
@@ -204,6 +213,11 @@ namespace HateSQL
         // insert an element to specific index
         int insert(size_t index, const Value &val)
         {
+            return buffered_insert(index , &val , 1 , 1);
+        }
+
+        // insert multiple values to the specific index , buffer_size is used for optimizing I/O ops
+        int buffered_insert(size_t index , const Value* values , size_t values_len ,size_t buffer_size = 5) {
             if (!file.is_open())
             {
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
@@ -212,37 +226,47 @@ namespace HateSQL
             HateSQL::Vector<Value> tmp;
             tmp.open(file_name + ".insert");
 
-            for (size_t i = index; i < size(); ++i)
-            {
 
-                Value tmp_value;
-                get(i , tmp_value);
-                tmp.push_back(tmp_value);
+            Value* buffer = new Value[buffer_size];
+
+            for (size_t i = index; i < size();)
+            {
+                size_t len = (buffer_size > size() - i) ? size() - i : buffer_size;
+                buffered_get(i , buffer , len);
+                tmp.buffered_push_back(buffer , len);
+
+                i += len;
             }
 
-            while (size() > index)
+            for (size_t i {size()}; i != index;)
             {
-                pop_back();
+                size_t len = (buffer_size > i - index) ? i - index : buffer_size;
+                buffered_pop_back(len);
+
+                i -= len;
             }
 
 
-            push_back(val);
+            buffered_push_back(values , values_len);
 
 
-            for (size_t i = 0; i < tmp.size(); ++i)
+            for (size_t i = 0; i < tmp.size();)
             {
-                Value tmp_value;
-                tmp.get(i , tmp_value);
-                push_back(tmp_value);
+                size_t len = (buffer_size > size() - i) ? size() - i : buffer_size;
+                tmp.buffered_get(i , buffer , len);
+                buffered_push_back(buffer , len);
+
+                i += len;
             }
 
 
             tmp.close();
+            delete[] buffer;
 
             std::remove((file_name + ".insert").c_str());
 
             return HATESQL_VECTOR_SUCCESS;
-        }
+        }   
 
         // gets value with index and sets it to return_result
         int get(size_t index , Value& return_result)
