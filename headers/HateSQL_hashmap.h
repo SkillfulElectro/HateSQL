@@ -47,20 +47,29 @@ namespace HateSQL
         std::hash<Key> hash_func;
 
     public:
+        // closes and opens db again
+        int reopen() {
+            return vec.reopen();
+        }
+        
+        // checks if db file exists in the system
         static int exists(const std::string &file_name) {
             return Vector<Value>::exists(file_name);
         }
         
+        // open the database file
         int open(const std::string &file_name)
         {
             return vec.open(file_name);
         }
 
+        // close the database file
         void close()
         {
             vec.close();
         }
 
+        // insert key and value to the database
         int insert(const Key &key, const Value &value)
         {
             if (key_exists(key).exists) {
@@ -76,6 +85,7 @@ namespace HateSQL
             return vec.insert(index, {hash_result, value});
         }
 
+        // remove by key
         int remove(const Key &key)
         {
             auto check_key = key_exists(key);
@@ -88,6 +98,7 @@ namespace HateSQL
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
         }
 
+        // checks if key exists , returns its index in HateSQL::Vector along with search result . it also remodifies the index of the key for faster searches
         HashMapKeyExistsResult key_exists(const Key &key)
         {
             size_t index = 0;
@@ -127,7 +138,8 @@ namespace HateSQL
             return {false, 0};
         }
 
-        int set(const Key &key, const Value &value)
+        // sets new value for the specific key
+        int set(const Key &key, const Value &new_value)
         {
             auto check_key = key_exists(key);
 
@@ -143,6 +155,7 @@ namespace HateSQL
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
         }
 
+        // gets the value from db file and sets it to return_result
         int get(const Key &key, Value &return_result)
         {
             auto check_key = key_exists(key);
@@ -160,11 +173,13 @@ namespace HateSQL
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
         }
 
+        // get the HateSQL::Vector object which behind HateSQL::HashMap
         Vector<HashMapData<Value>> &get_the_underlying_vector()
         {
             return vec;
         }
 
+        // cleanup
         ~HashMap()
         {
             vec.close();

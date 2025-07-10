@@ -125,14 +125,14 @@ namespace HateSQL
             }
         }
 
-        // reopen the db file -> writes changes to the file and opens it again
-        void reopen()
+        // reopen the db file 
+        int reopen()
         {
             close();
-            open(file_name);
+            return open(file_name);
         }
 
-        // pushes to the back of the vector
+        // pushes value to the back of the vector
         int push_back(const Value &value)
         {
             if (!file.is_open())
@@ -147,7 +147,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        // pops from back of the vector
+        // pops value from back of the vector
         int pop_back()
         {
             if (!file.is_open())
@@ -164,7 +164,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        // erases from index start to end
+        // erases values from index start to end
         int erase(size_t start, size_t end)
         {
             if (!file.is_open())
@@ -201,7 +201,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        // insert an element set specific index
+        // insert an element to specific index
         int insert(size_t index, const Value &val)
         {
             if (!file.is_open())
@@ -244,7 +244,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
-        /// returns constant ref to value set specific index
+        // gets value with index and sets it to return_result
         int get(size_t index , Value& return_result)
         {
             Value result;
@@ -269,6 +269,7 @@ namespace HateSQL
             return HATESQL_VECTOR_SUCCESS;
         }
 
+        // sets new_value to index
         int set(size_t index , const Value& new_value) {
             if (!file.is_open())
             {
@@ -293,9 +294,11 @@ namespace HateSQL
             return footer.len;
         }
 
+        // gets file name
         const std::string& get_file_name() {
             return file_name;
         }
+        
         // cleanup
         ~Vector()
         {
