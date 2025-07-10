@@ -45,8 +45,12 @@ namespace HateSQL
     {
         Vector<HashMapData<Value>> vec;
         std::hash<Key> hash_func;
-
+        size_t buffer_size;
     public:
+        HashMap(size_t val_count_per_transfers = 5) {
+            this->buffer_size = val_count_per_transfers;
+        }
+
         // closes and opens db again
         int reopen() {
             return vec.reopen();
@@ -82,7 +86,9 @@ namespace HateSQL
                 size_t index = hash_result % vec.size();
             }
             
-            return vec.insert(index, {hash_result, value});
+
+            HashMapData<Value> tmp = {hash_result, value};
+            return vec.buffered_insert(index, &tmp , 1 ,buffer_size);
         }
 
         // remove by key
@@ -92,7 +98,7 @@ namespace HateSQL
 
             if (check_key.exists)
             {
-                return vec.erase(check_key.index, check_key.index + 1);
+                return vec.buffered_erase(check_key.index, check_key.index + 1 , buffer_size);
             }
 
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
@@ -129,8 +135,8 @@ namespace HateSQL
                 if (val.key == hash_func(key))
                 {
                     auto cp_val = val;
-                    vec.erase(i , i + 1);
-                    vec.insert(index , cp_val);
+                    vec.buffered_erase(i , i + 1 , buffer_size);
+                    vec.buffered_insert(index , &cp_val , 1 , buffer_size);
                     return {true, index};
                 }
             }
