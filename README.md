@@ -4,6 +4,7 @@ really simple header only library which tries to make working with file simple a
 ## Goal
 - as easy as working with std::vector
 - be fast
+- no tcp and etc type of connections needed , only include the headers and everything is ready
 
 ## limitions
 - PODs , fixed lenght arrays and strusts which are made by them are only supported .
