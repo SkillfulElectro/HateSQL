@@ -1,13 +1,13 @@
-# HateSQL : No Query Database
-really simple header only library which tries to make working with file simple and easy like working with std::vector and objects like that in C++ .
+# HateSQL: A No-Query Database
 
-## Goal
-- as easy as working with std::vector
-- be fast
-- no tcp and etc type of connections needed , only include the headers and everything is ready
+HateSQL is a minimalist, header-only C++ library that makes file-based data storage as simple and intuitive as working with `std::vector` and plain old data (POD) types.
 
-## limitions
-- PODs , fixed lenght arrays and strusts which are made by them are only supported .
+## Goals
+- Ease of use: interact with your data as naturally as you would with `std::vector`.
+- Zero dependencies: no TCP connections, no external libraries—just include the headers and you’re ready to go.
 
-## How to use
-- just include header files and read comments on them .
+## Limitations
+- Only POD types, fixed-length arrays, and aggregates composed of them are supported.
+- No support for dynamic types, complex types .
+
+check main_test.cpp as an usage example .
