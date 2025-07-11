@@ -211,6 +211,10 @@ namespace HateSQL
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
+            if (buffer_size == 0) {
+                return HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED;
+            }
+
 
             Value* buffer = new Value[buffer_size];
 
