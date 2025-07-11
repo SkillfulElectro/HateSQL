@@ -56,11 +56,6 @@ namespace HateSQL
             return vec.reopen();
         }
         
-        // checks if db file exists in the system
-        static int exists(const std::string &file_name) {
-            return Vector<Value>::exists(file_name);
-        }
-        
         // open the database file
         int open(const std::string &file_name)
         {

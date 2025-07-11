@@ -12,7 +12,7 @@ int main()
 
 
 
-    if (HateSQL::Vector<int>::exists(vec_file) == HateSQL::HATESQL_VECTOR_EXISTS) {
+    if (HateSQL::exists(vec_file) == HateSQL::HATESQL_VECTOR_EXISTS) {
         vec.open(vec_file);
     } else {
         vec.open(vec_file);
@@ -39,7 +39,7 @@ int main()
     char shah[20] = "shahin";
     char man[20] = "mani";
 
-    if (HateSQL::HashMap<char[20] , int>::exists("hashmap.db") == HateSQL::HATESQL_VECTOR_EXISTS) {
+    if (HateSQL::exists("hashmap.db") == HateSQL::HATESQL_VECTOR_EXISTS) {
         map.open("hashmap.db");
     } else {
         map.open("hashmap.db");

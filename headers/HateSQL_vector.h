@@ -24,6 +24,64 @@ namespace HateSQL
         size_t file_type_name;
     };
 
+    // checks if a file is HateSQL::Vector
+    int exists(const std::string &file_name)
+    {
+        auto tmp = std::fstream(file_name, std::ios::binary | std::ios::in | std::ios::out);
+        VectorFooter tmp_footer;
+
+        if (tmp.is_open())
+        {
+            tmp.seekg(0, std::ios::beg);
+            auto len = tmp.tellg();
+            tmp.seekg(0, std::ios::end);
+            len = tmp.tellg() - len;
+
+            if (len == 0)
+            {
+                std::remove(file_name.c_str());
+                return HATESQL_VECTOR_DOES_NOT_EXISTS;
+            }
+
+            tmp.seekg(-sizeof(VectorFooter), std::ios::end);
+            tmp.read(reinterpret_cast<char *>(&tmp_footer), sizeof(VectorFooter));
+            tmp.close();
+
+            if (tmp_footer.file_type_name != std::hash<std::string>()("HateSQL_vector_file"))
+            {
+                return HATESQL_VECTOR_NOT_VECTOR_FILE;
+            }
+
+            return HATESQL_VECTOR_EXISTS;
+        }
+
+        return HATESQL_VECTOR_DOES_NOT_EXISTS;
+    }
+
+    template <typename Value>
+    // converts file to HateSQL::Vector of type Value
+    int recovery(const std::string& file_path) {
+        std::fstream file(file_path , std::ios::in | std::ios::binary | std::ios::out);
+
+        file.seekp(0 , std::ios::beg);
+        file.seekp(0 , std::ios::end);
+        size_t file_size = file.tellp();
+
+        size_t value_count_in_file = file_size / sizeof(Value);
+
+        VectorFooter footer;
+        footer.len = value_count_in_file;
+        footer.file_type_name = std::hash<std::string>()("HateSQL_vector_file");
+
+        file.seekp(value_count_in_file * sizeof(Value), std::ios::beg);
+        file.write(reinterpret_cast<const char*>(&footer) , sizeof(VectorFooter));
+
+        file.close();
+        std::filesystem::resize_file(file_path , sizeof(Value) * value_count_in_file + sizeof(VectorFooter));
+
+        return HATESQL_VECTOR_SUCCESS;
+    }
+
     template <typename Value>
     class Vector
     {
@@ -36,40 +94,6 @@ namespace HateSQL
         Vector()
         {
             footer.len = 0;
-        }
-
-        // check if db file exists
-        static int exists(const std::string &file_name)
-        {
-            auto tmp = std::fstream(file_name, std::ios::binary | std::ios::in | std::ios::out);
-            VectorFooter tmp_footer;
-
-            if (tmp.is_open())
-            {
-                tmp.seekg(0, std::ios::beg);
-                auto len = tmp.tellg();
-                tmp.seekg(0, std::ios::end);
-                len = tmp.tellg() - len;
-
-                if (len == 0)
-                {
-                    std::remove(file_name.c_str());
-                    return HATESQL_VECTOR_DOES_NOT_EXISTS;
-                }
-
-                tmp.seekg(-sizeof(VectorFooter), std::ios::end);
-                tmp.read(reinterpret_cast<char *>(&tmp_footer), sizeof(VectorFooter));
-                tmp.close();
-
-                if (tmp_footer.file_type_name != std::hash<std::string>()("HateSQL_vector_file"))
-                {
-                    return HATESQL_VECTOR_NOT_VECTOR_FILE;
-                }
-
-                return HATESQL_VECTOR_EXISTS;
-            }
-
-            return HATESQL_VECTOR_DOES_NOT_EXISTS;
         }
 
         // closes prev open file , and opens new one
@@ -364,6 +388,8 @@ namespace HateSQL
             close();
         }
     };
+
+
 };
 
 #endif
