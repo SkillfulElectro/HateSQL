@@ -132,6 +132,7 @@ namespace HateSQL
                     auto cp_val = val;
                     vec.buffered_erase(i , i + 1 , buffer_size);
                     vec.buffered_insert(index , &cp_val , 1 , buffer_size);
+                    
                     return {true, index};
                 }
             }

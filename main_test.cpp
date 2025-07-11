@@ -21,10 +21,20 @@ int main()
             vec.push_back(i);
         }
 
-        vec.buffered_erase(10 , 20 , 20);
+
+
+
     }
 
-    
+/**/
+    int* sample_buffer = new int[10];
+
+    for (int i {0} ; i < 10 ; ++i) {
+        sample_buffer[i] = 100;
+    }
+    vec.buffered_insert(vec.size() - 1 , sample_buffer , 10 , 20);
+
+    delete[] sample_buffer;
 
     for (size_t i = 0 ; i < vec.size() ; ++i) {
         int tmp;
