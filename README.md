@@ -1,5 +1,5 @@
 # HateSQL
-header only libs for simple tasks which does not need SQL db
+write on files how you would write to the RAM !
 
 notes:
 - usable with PODs and structs which are made using them !
