@@ -141,10 +141,12 @@ namespace HateSQL
         {
             if (file.is_open())
             {
-                file.seekp(0, std::ios::end);
+                file.seekp(footer.len * sizeof(Value) , std::ios::beg);
                 file.write(reinterpret_cast<const char *>(&footer), sizeof(VectorFooter));
-                footer.len = 0;
                 file.close();
+                std::filesystem::resize_file(file_name , footer.len * sizeof(Value) + sizeof(VectorFooter));
+
+                footer.len = 0;
                 footer.len = footer.file_type_name = 0;
             }
         }
@@ -169,9 +171,9 @@ namespace HateSQL
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
-            file.seekp(0, std::ios::end);
-            file.write(reinterpret_cast<const char *>(values), sizeof(Value) * values_len);
+            size_t set_index = size();
             footer.len += values_len;
+            buffered_set(set_index , values , values_len);
 
             return HATESQL_VECTOR_SUCCESS;
         } 
@@ -190,10 +192,6 @@ namespace HateSQL
             }
 
             footer.len -= pop_len;
-            file.close();
-            std::filesystem::resize_file(file_name , footer.len * sizeof(Value));
-
-            file.open(file_name , std::ios::binary | std::ios::in | std::ios::out);
 
             return HATESQL_VECTOR_SUCCESS;
         }
@@ -352,7 +350,7 @@ namespace HateSQL
         }
 
         // start from index and set buffer values
-        int buffered_set(size_t index ,const Value* buffer , size_t buffer_size) {
+        int buffered_set(size_t index ,const Value* values , size_t values_len) {
             if (!file.is_open())
             {
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
@@ -362,12 +360,12 @@ namespace HateSQL
                 return HATESQL_VECTOR_INVALID_INDEX_PASSED;
             }
 
-            if (index + buffer_size > size()) {
+            if (index + values_len > size()) {
                 return HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED;
             }
 
             file.seekp(index * sizeof(Value), std::ios::beg);
-            file.write(reinterpret_cast<const char *>(buffer), sizeof(Value) * buffer_size);
+            file.write(reinterpret_cast<const char *>(values), sizeof(Value) * values_len);
 
 
             return HATESQL_VECTOR_SUCCESS;
