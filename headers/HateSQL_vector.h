@@ -19,7 +19,7 @@ namespace HateSQL
         HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED = -6,
     };
 
-    struct VectorFooter
+    struct VectorHeader
     {
         size_t len;
         size_t file_type_name;
@@ -29,7 +29,7 @@ namespace HateSQL
     int exists(const std::string &file_name)
     {
         auto tmp = std::fstream(file_name, std::ios::binary | std::ios::in | std::ios::out);
-        VectorFooter tmp_footer;
+        VectorHeader tmp_header;
 
         if (tmp.is_open())
         {
@@ -44,11 +44,11 @@ namespace HateSQL
                 return HATESQL_VECTOR_DOES_NOT_EXISTS;
             }
 
-            tmp.seekg(-sizeof(VectorFooter), std::ios::end);
-            tmp.read(reinterpret_cast<char *>(&tmp_footer), sizeof(VectorFooter));
+            tmp.seekg(0 , std::ios::beg);
+            tmp.read(reinterpret_cast<char *>(&tmp_header), sizeof(VectorHeader));
             tmp.close();
 
-            if (tmp_footer.file_type_name != std::hash<std::string>()("HateSQL_vector_file"))
+            if (tmp_header.file_type_name != std::hash<std::string>()("HateSQL_vector_file"))
             {
                 return HATESQL_VECTOR_NOT_VECTOR_FILE;
             }
@@ -60,41 +60,17 @@ namespace HateSQL
     }
 
     template <typename Value>
-    // converts file to HateSQL::Vector of type Value
-    int recovery(const std::string& file_path) {
-        std::fstream file(file_path , std::ios::in | std::ios::binary | std::ios::out);
-
-        file.seekp(0 , std::ios::beg);
-        file.seekp(0 , std::ios::end);
-        size_t file_size = file.tellp();
-
-        size_t value_count_in_file = file_size / sizeof(Value);
-
-        VectorFooter footer;
-        footer.len = value_count_in_file;
-        footer.file_type_name = std::hash<std::string>()("HateSQL_vector_file");
-
-        file.seekp(value_count_in_file * sizeof(Value), std::ios::beg);
-        file.write(reinterpret_cast<const char*>(&footer) , sizeof(VectorFooter));
-
-        file.close();
-        std::filesystem::resize_file(file_path , sizeof(Value) * value_count_in_file + sizeof(VectorFooter));
-
-        return HATESQL_VECTOR_SUCCESS;
-    }
-
-    template <typename Value>
     class Vector
     {
     protected:
-        VectorFooter footer;
+        VectorHeader header;
         std::fstream file;
         std::string file_name;
 
     public:
         Vector()
         {
-            footer.len = 0;
+            header.len = 0;
         }
 
         // closes prev open file , and opens new one
@@ -107,13 +83,9 @@ namespace HateSQL
             case HATESQL_VECTOR_EXISTS:
             {
                 file.open(file_name, std::ios::binary | std::ios::in | std::ios::out);
-                file.seekg(-sizeof(VectorFooter), std::ios::end);
-                file.read(reinterpret_cast<char *>(&footer), sizeof(VectorFooter));
-                file.close();
+                file.seekg(0 , std::ios::beg);
+                file.read(reinterpret_cast<char *>(&header), sizeof(VectorHeader));
 
-                std::filesystem::resize_file(file_name, footer.len * sizeof(Value));
-
-                file.open(file_name , std::ios::binary | std::ios::in | std::ios::out);
             }
             break;
 
@@ -122,8 +94,8 @@ namespace HateSQL
                 file.open(file_name , std::ios::binary | std::ios::out);
                 file.close();
                 file.open(file_name , std::ios::binary | std::ios::in | std::ios::out);
-                footer.len = 0;
-                footer.file_type_name = std::hash<std::string>()("HateSQL_vector_file");
+                header.len = 0;
+                header.file_type_name = std::hash<std::string>()("HateSQL_vector_file");
             }
             break;
 
@@ -141,13 +113,14 @@ namespace HateSQL
         {
             if (file.is_open())
             {
-                file.seekp(footer.len * sizeof(Value) , std::ios::beg);
-                file.write(reinterpret_cast<const char *>(&footer), sizeof(VectorFooter));
+                file.seekp(0 , std::ios::beg);
+                file.write(reinterpret_cast<const char *>(&header), sizeof(VectorHeader));
                 file.close();
-                std::filesystem::resize_file(file_name , footer.len * sizeof(Value) + sizeof(VectorFooter));
+                
+                std::filesystem::resize_file(file_name , header.len * sizeof(Value) + sizeof(VectorHeader));
 
-                footer.len = 0;
-                footer.len = footer.file_type_name = 0;
+                header.len = 0;
+                header.len = header.file_type_name = 0;
             }
         }
 
@@ -172,7 +145,7 @@ namespace HateSQL
             }
 
             size_t set_index = size();
-            footer.len += values_len;
+            header.len += values_len;
             buffered_set(set_index , values , values_len);
 
             return HATESQL_VECTOR_SUCCESS;
@@ -191,7 +164,7 @@ namespace HateSQL
                 return HATESQL_VECTOR_DB_IS_NOT_OPENED;
             }
 
-            footer.len -= pop_len;
+            header.len -= pop_len;
 
             return HATESQL_VECTOR_SUCCESS;
         }
@@ -261,7 +234,7 @@ namespace HateSQL
 
             size_t prev_len = size();
 
-            footer.len += values_len;
+            header.len += values_len;
 
             size_t new_len = size();
 
@@ -287,45 +260,12 @@ namespace HateSQL
         // gets value with index and sets it to return_result
         int get(size_t index , Value& return_result)
         {
-            Value result;
-
-            if (!file.is_open())
-            {
-
-
-                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
-            }
-
-            if (index > size()) {
-
-
-                return HATESQL_VECTOR_INVALID_INDEX_PASSED;
-            }
-            
-
-            file.seekg(index * sizeof(Value), std::ios::beg);
-            file.read(reinterpret_cast<char *>(&return_result), sizeof(Value));
-
-            return HATESQL_VECTOR_SUCCESS;
+            return buffered_get(index , &return_result , 1);
         }
 
         // sets new_value to index
         int set(size_t index , const Value& new_value) {
-            if (!file.is_open())
-            {
-                return HATESQL_VECTOR_DB_IS_NOT_OPENED;
-            }
-
-            if (index > size()) {
-                return HATESQL_VECTOR_INVALID_INDEX_PASSED;
-            }
-
-
-            file.seekp(index * sizeof(Value), std::ios::beg);
-            file.write(reinterpret_cast<const char *>(&new_value), sizeof(Value));
-
-
-            return HATESQL_VECTOR_SUCCESS;
+            return buffered_set(index , &new_value , 1);
         }
 
         // start from index and fill the buffer
@@ -343,7 +283,7 @@ namespace HateSQL
                 return HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED;
             }
 
-            file.seekg(index * sizeof(Value), std::ios::beg);
+            file.seekg(index * sizeof(Value) + sizeof(VectorHeader), std::ios::beg);
             file.read(reinterpret_cast<char *>(buffer), sizeof(Value) * buffer_size);
 
             return HATESQL_VECTOR_SUCCESS;
@@ -364,7 +304,7 @@ namespace HateSQL
                 return HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED;
             }
 
-            file.seekp(index * sizeof(Value), std::ios::beg);
+            file.seekp(index * sizeof(Value) + sizeof(VectorHeader), std::ios::beg);
             file.write(reinterpret_cast<const char *>(values), sizeof(Value) * values_len);
 
 
@@ -374,7 +314,7 @@ namespace HateSQL
         // returns len of the vector
         size_t size()
         {
-            return footer.len;
+            return header.len;
         }
 
         // gets file name
