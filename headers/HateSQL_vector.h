@@ -61,7 +61,7 @@ namespace HateSQL
 
     template <typename Value>
     // used for re calc the len in VectorHeader part of the file
-    int update_header(const std::string &file_name) {
+    int update_header_len(const std::string &file_name) {
         if (exists(file_name) == HATESQL_VECTOR_EXISTS) {
             std::fstream file;
             VectorHeader header;
