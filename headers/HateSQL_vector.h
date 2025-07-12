@@ -60,6 +60,33 @@ namespace HateSQL
     }
 
     template <typename Value>
+    // used for re calc the len in VectorHeader part of the file
+    int update_header(const std::string &file_name) {
+        if (exists(file_name) == HATESQL_VECTOR_EXISTS) {
+            std::fstream file;
+            VectorHeader header;
+
+            file.open(file_name, std::ios::binary | std::ios::in | std::ios::out);
+            file.seekg(0 , std::ios::beg);
+            file.read(reinterpret_cast<char *>(&header), sizeof(VectorHeader));
+
+            file.seekg(sizeof(VectorHeader) , std::ios::beg);
+            size_t data_len = file.tellg();
+            file.seekg(0 , std::ios::end);
+            data_len = file.tellg() - data_len;
+
+            header.len = data_len / sizeof(Value);
+
+            file.seekp(0 , std::ios::beg);
+            file.write(reinterpret_cast<const char *>(&header), sizeof(VectorHeader));
+
+            return HATESQL_VECTOR_SUCCESS;
+        }
+
+        return HATESQL_VECTOR_NOT_VECTOR_FILE;
+    }
+
+    template <typename Value>
     class Vector
     {
     protected:
