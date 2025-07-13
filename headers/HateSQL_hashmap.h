@@ -76,10 +76,8 @@ namespace HateSQL
             }
 
             size_t hash_result = hash_func(key);
-            size_t index = 0;
-            if (vec.size() != 0) {
-                size_t index = hash_result % vec.size();
-            }
+            size_t index = hash_result % (vec.size() + 1);
+            
             
 
             HashMapData<Value> tmp = {hash_result, value};
@@ -106,7 +104,7 @@ namespace HateSQL
 
             if (vec.size() != 0)
             {
-                size_t index = (hash_func(key) % vec.size());
+                index = (hash_func(key) % vec.size());
             }
 
             for (size_t i = index; i < vec.size(); ++i)
