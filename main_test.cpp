@@ -3,6 +3,19 @@
 #include "headers/HateSQL_vector.h"
 #include "headers/HateSQL_hashmap.h"
 
+struct Char20 {
+    char data[20];
+};
+
+namespace std {
+    template<>
+    struct hash<Char20> {
+        size_t operator()(Char20 const& c) const noexcept {
+            return std::hash<char[20]>()(c.data);
+        }
+    };
+}
+
 
 int main()
 {
@@ -43,18 +56,18 @@ int main()
     }
 
     vec.close();
+    
+    HateSQL::HashMap<Char20 , int> map;
 
-    HateSQL::HashMap<char[20] , int> map;
 
-    char shah[20] = "shahin";
-    char man[20] = "mani";
 
     if (HateSQL::exists("hashmap.db") == HateSQL::HATESQL_VECTOR_EXISTS) {
         map.open("hashmap.db");
     } else {
         map.open("hashmap.db");
-        map.insert(shah , 10);
-        map.insert(man , 50);
+        map.insert({"shahin"} , 10);
+        map.insert({"mani"} , 50);
+        map.insert({"ghasem"} , 80);
     }
     
 
@@ -62,10 +75,9 @@ int main()
     int shahin;
     int mani;
 
-    map.set(shah , 20);
 
-    std::cout << "shahin found : " << map.get(shah , shahin) << "\n";
-    std::cout << "mani found : " << map.get(man , mani) << "\n";
+    std::cout << "shahin found : " << map.get({"shahin"} , shahin) << "\n";
+    std::cout << "mani found : " << map.get({"mani"} , mani) << "\n";
 
     std::cout << shahin << " , " << mani << "\n";
 
