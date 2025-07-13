@@ -100,12 +100,14 @@ namespace HateSQL
         // checks if key exists , returns its index in HateSQL::Vector along with search result . it also remodifies the index of the key for faster searches
         HashMapKeyExistsResult key_exists(const Key &key)
         {
-            size_t index = 0;
 
-            if (vec.size() != 0)
-            {
-                index = (hash_func(key) % vec.size());
+            if (vec.size() == 0) {
+                return HashMapKeyExistsResult{false, 0};
             }
+
+            
+            size_t index = (hash_func(key) % vec.size());
+
 
             for (size_t i = index; i < vec.size(); ++i)
             {
@@ -127,6 +129,8 @@ namespace HateSQL
                 
                 if (val.key == hash_func(key))
                 {
+                    std::cout << "called !\n";
+
                     auto cp_val = val;
                     vec.buffered_erase(i , i + 1 , buffer_size);
                     vec.buffered_insert(index , &cp_val , 1 , buffer_size);
