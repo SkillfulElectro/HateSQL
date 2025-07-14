@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
-#include "headers/HateSQL_vector.h"
-#include "headers/HateSQL_hashmap.h"
+#include "headers/HateSQL.h"
 
 struct Char20 {
     char data[20];

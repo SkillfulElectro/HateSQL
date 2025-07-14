@@ -107,7 +107,7 @@ namespace HateSQL
 
             
             size_t index = (hash_func(key) % vec.size());
-
+            
 
             for (size_t i = index; i < vec.size(); ++i)
             {
@@ -129,7 +129,6 @@ namespace HateSQL
                 
                 if (val.key == hash_func(key))
                 {
-                    std::cout << "called !\n";
 
                     auto cp_val = val;
                     vec.buffered_erase(i , i + 1 , buffer_size);
