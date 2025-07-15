@@ -34,19 +34,19 @@ int main()
         }
 
 
+        int* sample_buffer = new int[10];
 
+        for (int i {0} ; i < 10 ; ++i) {
+            sample_buffer[i] = 100;
+        }
+        vec.buffered_insert(vec.size() - 1 , sample_buffer , 10 , 20);
+
+        delete[] sample_buffer;
 
     }
 
 /**/
-    int* sample_buffer = new int[10];
 
-    for (int i {0} ; i < 10 ; ++i) {
-        sample_buffer[i] = 100;
-    }
-    vec.buffered_insert(vec.size() - 1 , sample_buffer , 10 , 20);
-
-    delete[] sample_buffer;
 
     for (size_t i = 0 ; i < vec.size() ; ++i) {
         int tmp;
@@ -81,6 +81,19 @@ int main()
     std::cout << shahin << " , " << mani << "\n";
 
     map.close();
+    
 
+    HateSQL::DynVector dyn_vec;
+    dyn_vec.open("metadata.db" , "datafile.db");
+
+    dyn_vec.push_back("hi" , sizeof(char[20]));
+
+    char* val = new char[20];
+
+    dyn_vec.get(dyn_vec.size() - 1 , val , sizeof(char[20]));
+
+    std::cout << val << "\n";
+
+    dyn_vec.close();
     return 0;
 }

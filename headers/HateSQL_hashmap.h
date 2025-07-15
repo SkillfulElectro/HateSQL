@@ -1,7 +1,7 @@
 #ifndef HATE_SQL_HASHMAP
 #define HATE_SQL_HASHMAP
 
-#include "HateSQL_vector.h"
+#include "HateSQL.h"
 
 /*
 HateSQL::HashMap is just wrapper on top of HateSQL::Vector
@@ -72,7 +72,7 @@ namespace HateSQL
         int insert(const Key &key, const Value &value)
         {
             if (key_exists(key).exists) {
-                return HATESQL_VECTOR_SUCCESS;
+                return HATESQL_SUCCESS;
             }
 
             size_t hash_result = hash_func(key);
@@ -107,7 +107,7 @@ namespace HateSQL
 
             
             size_t index = (hash_func(key) % vec.size());
-            
+
 
             for (size_t i = index; i < vec.size(); ++i)
             {
@@ -170,7 +170,7 @@ namespace HateSQL
 
                 return_result = map_result.value;
 
-                return HATESQL_VECTOR_SUCCESS;
+                return HATESQL_SUCCESS;
             }
 
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
