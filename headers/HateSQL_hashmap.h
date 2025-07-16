@@ -42,7 +42,7 @@ namespace HateSQL
     };
 
     template <typename Key, typename Value>
-    class HashMap
+    class HashMap : public HateSQLBase<Key , Value>
     {
         Vector<HashMapData<Value>> vec;
         std::hash<Key> hash_func;
@@ -58,19 +58,19 @@ namespace HateSQL
         }
         
         // open the database file
-        int open(const std::string &file_name)
+        int open(const std::string &file_name) override 
         {
             return vec.open(file_name);
         }
 
         // close the database file
-        void close()
+        void close() override 
         {
             vec.close();
         }
 
         // insert key and value to the database
-        int insert(const Key &key, const Value &value)
+        int insert(const Key &key, const Value &value) override
         {
             if (key_exists(key).exists) {
                 return HATESQL_SUCCESS;
@@ -109,7 +109,7 @@ namespace HateSQL
         }
 
         // remove by key
-        int remove(const Key &key)
+        int remove(const Key &key) override
         {
             auto check_key = key_exists(key);
 
@@ -162,13 +162,12 @@ namespace HateSQL
                     size_t value_org_index = value_at_index.key % vec.size();
 
                     if (value_org_index <= index) {
-
+                            
                         vec.buffered_insert(index , &search_value , 1 , buffer_size);
 
                         search_value.deleted = true;
                         vec.set(i , search_value);
                     } else {
-
                         vec.set(index , search_value);
                         vec.set(i , value_at_index);
                     }
@@ -184,7 +183,7 @@ namespace HateSQL
         }
 
         // sets new value for the specific key
-        int set(const Key &key, const Value &new_value)
+        int set(const Key &key, const Value &new_value) override 
         {
             auto check_key = key_exists(key);
 
@@ -201,7 +200,7 @@ namespace HateSQL
         }
 
         // gets the value from db file and sets it to return_result
-        int get(const Key &key, Value &return_result)
+        int get(const Key &key, Value &return_result) override 
         {
             auto check_key = key_exists(key);
 
@@ -222,6 +221,15 @@ namespace HateSQL
         Vector<HashMapData<Value>> &get_the_underlying_vector()
         {
             return vec;
+        }
+
+
+        bool is_open() override {
+            return vec.is_open();
+        }
+
+        size_t size() override {
+            return vec.size();
         }
 
         // cleanup

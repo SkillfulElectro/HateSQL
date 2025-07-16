@@ -85,7 +85,7 @@ namespace HateSQL
 
 
     template <typename Value>
-    class Vector
+    class Vector : public HateSQLBase<size_t , Value>
     {
     protected:
         VectorHeader header;
@@ -99,7 +99,7 @@ namespace HateSQL
         }
 
         // closes prev open file , and opens new one
-        int open(const std::string &file_name)
+        int open(const std::string &file_name) override
         {
             this->close();
 
@@ -137,7 +137,7 @@ namespace HateSQL
         }
 
         // writes changes to the db file and closes it
-        void close()
+        void close() override
         {
             if (file.is_open())
             {
@@ -151,7 +151,7 @@ namespace HateSQL
             }
         }
 
-        bool is_open() {
+        bool is_open() override {
             return file.is_open();
         }
         
@@ -163,7 +163,7 @@ namespace HateSQL
         }
 
         // pushes value to the back of the vector
-        int push_back(const Value &value)
+        int push_back(const Value &value) override
         {
             return buffered_push_back(&value , 1);
         }
@@ -183,7 +183,7 @@ namespace HateSQL
         } 
 
         // pops value from back of the vector
-        int pop_back()
+        int pop_back() override
         {
             return buffered_pop_back(1);
         }
@@ -200,6 +200,9 @@ namespace HateSQL
             return HATESQL_SUCCESS;
         }
 
+        int remove(const size_t& index) override {
+            return erase(index , index + 1);
+        }
         // erases values from index start to end
         int erase(size_t start, size_t end)
         {
@@ -241,7 +244,7 @@ namespace HateSQL
         }
 
         // insert an element to specific index
-        int insert(size_t index, const Value &val)
+        int insert(const size_t& index, const Value &val) override
         {
             return buffered_insert(index , &val , 1 , 1);
         }
@@ -289,13 +292,13 @@ namespace HateSQL
         }   
 
         // gets value with index and sets it to return_result
-        int get(size_t index , Value& return_result)
+        int get(const size_t& index , Value& return_result) override
         {
             return buffered_get(index , &return_result , 1);
         }
 
         // sets new_value to index
-        int set(size_t index , const Value& new_value) {
+        int set(const size_t& index , const Value& new_value) override {
             return buffered_set(index , &new_value , 1);
         }
 
@@ -343,7 +346,7 @@ namespace HateSQL
         }
 
         // returns len of the vector
-        size_t size()
+        size_t size() override 
         {
             return header.len;
         }
