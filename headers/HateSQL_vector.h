@@ -145,7 +145,6 @@ namespace HateSQL
                 file.write(reinterpret_cast<const char *>(&header), sizeof(VectorHeader));
                 file.close();
                 
-                // std::filesystem::resize_file(file_name , header.len * sizeof(Value) + sizeof(VectorHeader));
 
                 header.len = 0;
                 header.len = header.file_type_name = 0;

@@ -105,7 +105,7 @@ namespace HateSQL
                 return HashMapKeyExistsResult{false, 0};
             }
 
-            
+            size_t hash_result = hash_func(key);
             size_t index = (hash_func(key) % vec.size());
 
 
@@ -115,7 +115,7 @@ namespace HateSQL
                 vec.get(i , val);
 
                 
-                if (val.key == hash_func(key))
+                if (val.key == hash_result)
                 {
                     return {true, i};
                 }
@@ -127,7 +127,7 @@ namespace HateSQL
                 vec.get(i , val);
 
                 
-                if (val.key == hash_func(key))
+                if (val.key == hash_result)
                 {
 
                     auto cp_val = val;

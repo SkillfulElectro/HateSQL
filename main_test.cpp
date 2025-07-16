@@ -67,6 +67,7 @@ int main()
         map.insert({"shahin"} , 10);
         map.insert({"mani"} , 50);
         map.insert({"ghasem"} , 80);
+        map.insert({"bozmaje"} , 20);
     }
     
 
@@ -76,7 +77,7 @@ int main()
 
 
     std::cout << "shahin found : " << map.get({"shahin"} , shahin) << "\n";
-    std::cout << "mani found : " << map.get({"mani"} , mani) << "\n";
+    std::cout << "mani found : " << map.get({"ghasem"} , mani) << "\n";
 
     std::cout << shahin << " , " << mani << "\n";
 
@@ -86,8 +87,9 @@ int main()
     HateSQL::DynVector dyn_vec;
     dyn_vec.open("metadata.db" , "datafile.db");
 
+    /*
     dyn_vec.push_back("hi" , sizeof(char[20]));
-
+    */
     char* val = new char[20];
 
     dyn_vec.get(dyn_vec.size() - 1 , val , sizeof(char[20]));

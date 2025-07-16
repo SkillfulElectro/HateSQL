@@ -91,7 +91,9 @@ namespace HateSQL {
         }
         
         int close() {
-            data_file.close();
+            if (data_file.is_open()) {
+                data_file.close();
+            }
             meta_data.close();
             return HATESQL_SUCCESS;
         }
