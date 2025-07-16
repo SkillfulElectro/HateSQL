@@ -26,6 +26,7 @@ namespace HateSQL
     {
         size_t key;
         Value value;
+        bool deleted;
     };
 
 
@@ -77,10 +78,28 @@ namespace HateSQL
 
             size_t hash_result = hash_func(key);
             size_t index = hash_result % (vec.size() + 1);
+            HashMapData<Value> tmp = {hash_result, value , false};
             
-            
+            if (vec.size() != 0) {
+                size_t set_index = hash_result % vec.size();
+                HashMapData<Value> check_deleted;
+                
+                for (size_t i{set_index} ; i < vec.size() ; ++i) {
+                    vec.get(i , check_deleted);
 
-            HashMapData<Value> tmp = {hash_result, value};
+
+
+                    if (check_deleted.deleted) {
+                        return vec.set(i , tmp);
+                    }
+
+                    if (check_deleted.key % vec.size() > set_index) {
+                        break;
+                    }
+                }
+            }
+
+
             return vec.buffered_insert(index, &tmp , 1 ,buffer_size);
         }
 
@@ -91,7 +110,10 @@ namespace HateSQL
 
             if (check_key.exists)
             {
-                return vec.buffered_erase(check_key.index, check_key.index + 1 , buffer_size);
+                HashMapData<Value> del_val;
+                vec.get(check_key.index , del_val);
+                del_val.deleted = true;
+                vec.set(check_key.index , del_val);
             }
 
             return HATESQL_HASHMAP_KEY_NOT_FOUND;
@@ -108,14 +130,15 @@ namespace HateSQL
             size_t hash_result = hash_func(key);
             size_t index = (hash_func(key) % vec.size());
 
+            HashMapData<Value> search_value;
 
             for (size_t i = index; i < vec.size(); ++i)
             {
-                HashMapData<Value> val;
-                vec.get(i , val);
+
+                vec.get(i , search_value);
 
                 
-                if (val.key == hash_result)
+                if (search_value.key == hash_result)
                 {
                     return {true, i};
                 }
@@ -123,16 +146,30 @@ namespace HateSQL
 
             for (size_t i = 0; i < index; ++i)
             {
-                HashMapData<Value> val;
-                vec.get(i , val);
+                vec.get(i , search_value);
 
                 
-                if (val.key == hash_result)
+                if (search_value.key == hash_result)
                 {
+                    HashMapData<Value> value_at_index;
+                    vec.get(index , value_at_index);
 
-                    auto cp_val = val;
-                    vec.buffered_erase(i , i + 1 , buffer_size);
-                    vec.buffered_insert(index , &cp_val , 1 , buffer_size);
+                    size_t value_org_index = value_at_index.key % vec.size();
+
+                    if (value_org_index <= index) {
+                                            std::cout << "called ! 1\n";
+                        vec.buffered_insert(index , &search_value , 1 , buffer_size);
+
+                        search_value.deleted = true;
+                        vec.set(i , search_value);
+                    } else {
+                                            std::cout << "called ! 2\n";
+                        vec.set(index , search_value);
+                        vec.set(i , value_at_index);
+                    }
+
+
+
                     
                     return {true, index};
                 }
