@@ -86,14 +86,19 @@ namespace HateSQL
 
                 for (size_t i{set_index} ; i < vec.size() ; ++i) {
                     vec.get(i , check_deleted);
-
+                    size_t check_deleted_org_index = check_deleted.key % vec.size();
 
 
                     if (check_deleted.deleted) {
                         return vec.set(i , tmp);
                     }
 
-                    if (check_deleted.key % vec.size() > set_index) {
+                    if (check_deleted_org_index > i) {
+                        vec.set(i , tmp);
+                        return vec.insert(check_deleted_org_index , check_deleted);
+                    }
+
+                    if (check_deleted_org_index > set_index) {
                         break;
                     }
                 }
