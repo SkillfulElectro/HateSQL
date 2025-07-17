@@ -135,16 +135,14 @@ namespace HateSQL
             }
 
             HashMapData<Value> tmp;
-            if (vec.size() == 0) {
-                
-                tmp.deleted = true;
-
+            if (vec.size() == 0) {                
+                tmp.deleted = false;
+                tmp.key = 0;
+                filled_len += 1;
                 result = vec.push_back(tmp);
             } else {
-                vec.get(vec.size() - 1 , tmp);
+                vec.get(0 , tmp);
                 filled_len = tmp.key;
-            
-                vec.pop_back();
             }
             
             return result;
@@ -155,8 +153,7 @@ namespace HateSQL
         {
             HashMapData<Value> tmp;
             tmp.key = filled_len;
-            tmp.deleted = true;
-            vec.push_back(tmp);
+            vec.set(0 , tmp);
             vec.close();
         }
 
@@ -238,7 +235,7 @@ namespace HateSQL
             }
 
             size_t hash_result = hash_func(key);
-            size_t index = (hash_func(key) % vec.size());
+            size_t index = (hash_result % vec.size());
 
             HashMapData<Value> search_value;
 
@@ -254,7 +251,7 @@ namespace HateSQL
                 }
             }
 
-            for (size_t i = 0; i < index; ++i)
+            for (size_t i = 1; i < index; ++i)
             {
 
                 vec.get(i , search_value);
