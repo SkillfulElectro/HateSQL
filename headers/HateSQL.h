@@ -26,7 +26,6 @@ namespace HateSQL {
         virtual int pop_back() {
             return HATESQL_INVALID_METHOD;
         }
-
         virtual int remove(const Key&) = 0;
         virtual int get(const Key&  , Value& ) = 0;
         virtual int set(const Key& , const Value&) = 0;
