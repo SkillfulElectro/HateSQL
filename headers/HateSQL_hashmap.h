@@ -143,7 +143,8 @@ namespace HateSQL
             } else {
                 vec.get(vec.size() - 1 , tmp);
                 filled_len = tmp.key;
-                //vec.pop_back();
+            
+                vec.pop_back();
             }
             
             return result;
