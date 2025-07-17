@@ -11,6 +11,7 @@ HateSQL is a minimalist, header-only C++ library that makes file-based data stor
 - No support for dynamic types, complex types .
 
 ## modules
+all of the modules support multiple read but single write operation , so you can bind as many as you want of them to a file .
 - `HateSQL::Vector` : simple `std::vector` like class which manages the memory within the file .
 
 - `HateSQL::HashMap` : just simple wrapper on top of `HateSQL::Vector` which tries to implement simple hashmap and uses lazy rehashing algorithm .
