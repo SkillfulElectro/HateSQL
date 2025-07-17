@@ -65,10 +65,14 @@ namespace HateSQL
                 tmp.push_back(filler_value);
             }
 
-            size_t filled_count = 0;
+            // setting header
+            vec.get(0 , filler_value);
+            tmp.set(0 , filler_value);
+
+            size_t filled_count = 1;
             
             HashMapData<Value> tmp_value;
-            for (size_t i{0} ; i < vec.size() ; ++i) {
+            for (size_t i{1} ; i < vec.size() ; ++i) {
                 vec.get(i , filler_value);
 
                 if (!filler_value.deleted) {
@@ -87,7 +91,7 @@ namespace HateSQL
                     }
 
                     if (!found_place) {
-                        for (size_t i{0}; i < new_index ; ++i) {
+                        for (size_t i{1}; i < new_index ; ++i) {
                             tmp.get(i , tmp_value);
 
                             if (tmp_value.deleted) {
@@ -137,8 +141,8 @@ namespace HateSQL
             HashMapData<Value> tmp;
             if (vec.size() == 0) {                
                 tmp.deleted = false;
-                tmp.key = 0;
                 filled_len += 1;
+                tmp.key = filled_len;
                 result = vec.push_back(tmp);
             } else {
                 vec.get(0 , tmp);
