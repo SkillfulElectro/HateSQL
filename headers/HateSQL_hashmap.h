@@ -191,7 +191,7 @@ namespace HateSQL
             }
 
             if (!found_place) {
-                for (size_t i{0}; i < index ; ++i) {
+                for (size_t i{1}; i < index ; ++i) {
                     vec.get(i , check_value);
 
                     if (check_value.deleted) {
@@ -313,7 +313,7 @@ namespace HateSQL
         }
 
         size_t size() override {
-            return filled_len;
+            return filled_len - 1;
         }
 
         // cleanup
