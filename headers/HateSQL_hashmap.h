@@ -52,7 +52,7 @@ namespace HateSQL
         size_t filled_len;
         double load_factor;
 
-        size_t performance;
+
     public:
         void rehash(size_t mult_size_by) {
             Vector<HashMapData<Value>> tmp;
@@ -134,8 +134,9 @@ namespace HateSQL
     public:
         HashMap(size_t buffer_size = 5) {
             this->buffer_size = buffer_size;
+            vec.set_buffer_size(buffer_size);
             load_factor = 0.75;
-            filled_len = 0;;
+            filled_len = 0;
         }
 
         void set_buffer_size(size_t buffer_size) override {
