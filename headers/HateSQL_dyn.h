@@ -68,6 +68,10 @@ namespace HateSQL {
             meta_data = new HashMap<Key , DynVectorData>;
         }
 
+        void set_buffer_size(size_t buffer_size) {
+            meta_data->set_buffer_size(buffer_size);
+        }
+
         int open(const std::string& meta_file_path , const std::string& data_file_path) {
             int open_meta_data_res = meta_data->open(meta_file_path);
 
@@ -216,6 +220,11 @@ namespace HateSQL {
             }
 
             return set(index , value , value_size);
+        }
+
+        void clear() {
+            meta_data->clear();
+            
         }
 
         size_t size() {

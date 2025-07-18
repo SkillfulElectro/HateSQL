@@ -15,10 +15,12 @@ namespace HateSQL {
     class HateSQLBase {
     public:
         virtual int open(const std::string&) = 0;
+        virtual void set_buffer_size(size_t) = 0;
         virtual void close() = 0;
         virtual int insert(const Key&, const Value&) = 0;
         virtual bool is_open() = 0;
         virtual size_t size() = 0;
+        virtual void clear() = 0;
         virtual int push_back(const Value&) {
             return HATESQL_INVALID_METHOD;
         }

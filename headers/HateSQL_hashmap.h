@@ -51,19 +51,33 @@ namespace HateSQL
         
         size_t filled_len;
         double load_factor;
-    private:
-        void rehash() {
+
+        size_t performance;
+    public:
+        void rehash(size_t mult_size_by) {
             Vector<HashMapData<Value>> tmp;
             std::string orginal_filename = vec.get_file_name();
             tmp.open(orginal_filename + ".rehash");
 
-            size_t new_vec_size = vec.size() * 2;
+            size_t new_vec_size = vec.size() * mult_size_by;
 
             HashMapData<Value> filler_value;
             filler_value.deleted = true;
-            for (size_t i {0} ; i < new_vec_size ; ++i) {
-                tmp.push_back(filler_value);
+
+            HashMapData<Value>* buffer = new HashMapData<Value>[buffer_size];
+
+            for (size_t i{0}; i < buffer_size ; ++i) {
+                buffer[i] = filler_value;
             }
+
+            for (size_t i {0} ; i < new_vec_size ;) {
+                size_t len  = (new_vec_size - i > buffer_size) ? buffer_size : (new_vec_size - i);
+                tmp.buffered_push_back(buffer , len);
+
+                i += len;
+            }
+
+            delete[] buffer;
 
             // setting header
             vec.get(0 , filler_value);
@@ -118,10 +132,15 @@ namespace HateSQL
         }
 
     public:
-        HashMap(size_t val_count_per_transfers = 5) {
-            this->buffer_size = val_count_per_transfers;
+        HashMap(size_t buffer_size = 5) {
+            this->buffer_size = buffer_size;
             load_factor = 0.75;
-            filled_len = 0;
+            filled_len = 0;;
+        }
+
+        void set_buffer_size(size_t buffer_size) override {
+            this->buffer_size = buffer_size;
+            vec.set_buffer_size(buffer_size);
         }
 
         // closes and opens db again
@@ -173,7 +192,7 @@ namespace HateSQL
 
 
             if ((double)filled_len / vec.size() >= load_factor) {
-                rehash();
+                rehash(2);
             }
 
             size_t index = hash_result % (vec.size());
@@ -314,6 +333,30 @@ namespace HateSQL
 
         bool is_open() override {
             return vec.is_open();
+        }
+
+        void clear() override {
+            HashMapData<Value> filler_value;
+            filler_value.deleted = true;
+
+            size_t vec_len = vec.size();
+
+            HashMapData<Value>* buffer = new HashMapData<Value>[buffer_size];
+
+            for (size_t i{0}; i < buffer_size ; ++i) {
+                buffer[i] = filler_value;
+            }
+
+            for (size_t i {1} ; i < vec_len ;) {
+                size_t len  = (vec_len - i > buffer_size) ? buffer_size : (vec_len - i);
+                vec.buffered_set(i , buffer , len);
+
+                i += len;
+            }
+
+            filled_len = 1;
+
+            delete[] buffer;
         }
 
         size_t size() override {

@@ -91,11 +91,15 @@ namespace HateSQL
         VectorHeader header;
         std::fstream file;
         std::string file_name;
-
+        size_t buffer_size;
     public:
         Vector()
         {
             header.len = 0;
+        }
+
+        void set_buffer_size(size_t buffer_size) override {
+            this->buffer_size = buffer_size;
         }
 
         // closes prev open file , and opens new one
@@ -206,7 +210,7 @@ namespace HateSQL
         // erases values from index start to end
         int erase(size_t start, size_t end)
         {
-            return buffered_erase(start , end , 1);
+            return buffered_erase(start , end , buffer_size);
         }
 
         // erases values from index start to end , buffer_size is used for optimizing I/O ops
@@ -246,7 +250,7 @@ namespace HateSQL
         // insert an element to specific index
         int insert(const size_t& index, const Value &val) override
         {
-            return buffered_insert(index , &val , 1 , 1);
+            return buffered_insert(index , &val , 1 , buffer_size);
         }
 
         // insert multiple values to the specific index , buffer_size is used for optimizing I/O ops
@@ -343,6 +347,10 @@ namespace HateSQL
 
 
             return HATESQL_SUCCESS;
+        }
+
+        void clear() override {
+            header.len = 0;
         }
 
         // returns len of the vector
