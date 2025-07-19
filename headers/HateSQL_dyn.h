@@ -90,7 +90,7 @@ namespace HateSQL {
                 return open_meta_data_res;
             }
 
-            int data_file_op_res = data_file_exists(data_file_path);
+            int data_file_op_res = data_file_exists(data_file_path , data_file_seek_start);
             switch (data_file_op_res) {
             case HATESQL_DYN_VECTOR_INVALID_DATA_FILE_PATH:
                 data_file.open(data_file_path , std::ios::out | std::ios::binary);
@@ -146,7 +146,7 @@ namespace HateSQL {
                 return HATESQL_SUCCESS;
             } else {
                 data_file.seekp(0 , std::ios::end);
-                loc.start_index = data_file.tellp();
+                loc.start_index = data_file.tellp() - data_file_seek_start;
                 loc.len = value_size;
 
                 data_file.write(reinterpret_cast<const char*>(value) , value_size);
