@@ -19,12 +19,12 @@ namespace HateSQL {
 
     size_t hate_sql_data_file_code = std::hash<std::string>()("HateSQL_data_file");
 
-    int data_file_exists(const std::string& file_path) {
+    int data_file_exists(const std::string& file_path , const size_t& seek_start = 0) {
         std::fstream file(file_path , std::ios::in | std::ios::binary);
 
         if (file.is_open()) {
 
-            file.seekg(0, std::ios::beg);
+            file.seekg(seek_start, std::ios::beg);
             auto len = file.tellg();
             file.seekg(0, std::ios::end);
             len = file.tellg() - len;
@@ -36,7 +36,7 @@ namespace HateSQL {
                 return HATESQL_DYN_VECTOR_INVALID_DATA_FILE_PATH;
             }
 
-            file.seekg(0 , std::ios::beg);
+            file.seekg(seek_start , std::ios::beg);
             size_t signature;
             file.read(reinterpret_cast<char *>(&signature) , sizeof(size_t));
 
@@ -59,17 +59,28 @@ namespace HateSQL {
         HateSQLBase<Key , DynVectorData>* meta_data;
         DynHashMap(HateSQLBase<Key , DynVectorData>* mt_dt) {
             meta_data = mt_dt;
+            data_file_seek_start = 0;
         }
     private:
         std::fstream data_file;
         std::string data_file_name;
+        size_t data_file_seek_start;
     public:
         DynHashMap() {
             meta_data = new HashMap<Key , DynVectorData>;
+            data_file_seek_start = 0;
         }
 
         void set_buffer_size(size_t buffer_size) {
             meta_data->set_buffer_size(buffer_size);
+        }
+
+        void set_meta_file_seek_start(const size_t& seek_start) {
+            meta_data->set_seek_start(seek_start);
+        }
+
+        void set_data_file_seek_start(const size_t& seek_start) {
+            data_file_seek_start = seek_start;
         }
 
         int open(const std::string& meta_file_path , const std::string& data_file_path) {
@@ -86,7 +97,7 @@ namespace HateSQL {
                 data_file.close();
                 data_file.open(data_file_path , std::ios::in | std::ios::out | std::ios::binary);
                 
-                data_file.seekp(0 , std::ios::beg);
+                data_file.seekp(data_file_seek_start , std::ios::beg);
                 data_file.write(reinterpret_cast<const char*>(&hate_sql_data_file_code) , sizeof(size_t));
 
                 break;
@@ -129,7 +140,7 @@ namespace HateSQL {
             }
 
             if (loc.len >= value_size) {
-                data_file.seekp(loc.start_index , std::ios::beg);
+                data_file.seekp(data_file_seek_start + loc.start_index , std::ios::beg);
                 data_file.write(reinterpret_cast<const char*>(value) , value_size);
 
                 return HATESQL_SUCCESS;
@@ -165,7 +176,7 @@ namespace HateSQL {
             }
 
             if (loc.len == value_size) {
-                data_file.seekg(loc.start_index , std::ios::beg);
+                data_file.seekg(data_file_seek_start + loc.start_index , std::ios::beg);
                 data_file.read(reinterpret_cast<char*>(value) , loc.len);
 
                 return HATESQL_SUCCESS;
@@ -224,7 +235,6 @@ namespace HateSQL {
 
         void clear() {
             meta_data->clear();
-            
         }
 
         size_t size() {

@@ -139,9 +139,13 @@ namespace HateSQL
             filled_len = 0;
         }
 
-        void set_buffer_size(size_t buffer_size) override {
+        void set_buffer_size(const size_t& buffer_size) override {
             this->buffer_size = buffer_size;
             vec.set_buffer_size(buffer_size);
+        }
+
+        void set_seek_start(const size_t& seek_start) override {
+            vec.set_seek_start(seek_start);
         }
 
         // closes and opens db again

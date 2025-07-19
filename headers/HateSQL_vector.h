@@ -22,7 +22,7 @@ namespace HateSQL
     };
 
     // checks if a file is HateSQL::Vector
-    int exists(const std::string &file_name)
+    int exists(const std::string &file_name , const size_t& seek_start = 0)
     {
         auto tmp = std::fstream(file_name, std::ios::binary | std::ios::in | std::ios::out);
         VectorHeader tmp_header;
@@ -58,13 +58,13 @@ namespace HateSQL
 
     template <typename Value>
     // used for re calc the len in VectorHeader part of the file
-    int update_header_len(const std::string &file_name) {
+    int update_header_len(const std::string &file_name , const size_t& seek_start = 0) {
         if (exists(file_name) == HATESQL_VECTOR_EXISTS) {
             std::fstream file;
             VectorHeader header;
 
             file.open(file_name, std::ios::binary | std::ios::in | std::ios::out);
-            file.seekg(0 , std::ios::beg);
+            file.seekg(seek_start , std::ios::beg);
             file.read(reinterpret_cast<char *>(&header), sizeof(VectorHeader));
 
             file.seekg(sizeof(VectorHeader) , std::ios::beg);
@@ -74,7 +74,7 @@ namespace HateSQL
 
             header.len = data_len / sizeof(Value);
 
-            file.seekp(0 , std::ios::beg);
+            file.seekp(seek_start , std::ios::beg);
             file.write(reinterpret_cast<const char *>(&header), sizeof(VectorHeader));
 
             return HATESQL_SUCCESS;
@@ -91,15 +91,21 @@ namespace HateSQL
         VectorHeader header;
         std::fstream file;
         std::string file_name;
+        size_t seek_start;
         size_t buffer_size;
     public:
         Vector()
         {
             header.len = 0;
+            seek_start = 0;
         }
 
-        void set_buffer_size(size_t buffer_size) override {
+        void set_buffer_size(const size_t& buffer_size) override {
             this->buffer_size = buffer_size;
+        }
+
+        void set_seek_start(const size_t& seek_start) override {
+            this->seek_start = seek_start;
         }
 
         // closes prev open file , and opens new one
@@ -107,12 +113,12 @@ namespace HateSQL
         {
             this->close();
 
-            switch (exists(file_name))
+            switch (exists(file_name , seek_start))
             {
             case HATESQL_VECTOR_EXISTS:
             {
                 file.open(file_name, std::ios::binary | std::ios::in | std::ios::out);
-                file.seekg(0 , std::ios::beg);
+                file.seekg(seek_start , std::ios::beg);
                 file.read(reinterpret_cast<char *>(&header), sizeof(VectorHeader));
 
             }
@@ -126,7 +132,7 @@ namespace HateSQL
                 header.len = 0;
                 header.file_type_name = std::hash<std::string>()("HateSQL_vector_file");
 
-                file.seekp(0 , std::ios::beg);
+                file.seekp(seek_start , std::ios::beg);
                 file.write(reinterpret_cast<const char *>(&header), sizeof(VectorHeader));
             }
             break;
@@ -145,7 +151,7 @@ namespace HateSQL
         {
             if (file.is_open())
             {
-                file.seekp(0 , std::ios::beg);
+                file.seekp(seek_start , std::ios::beg);
                 file.write(reinterpret_cast<const char *>(&header), sizeof(VectorHeader));
                 file.close();
                 
@@ -321,7 +327,7 @@ namespace HateSQL
                 return HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED;
             }
 
-            file.seekg(index * sizeof(Value) + sizeof(VectorHeader), std::ios::beg);
+            file.seekg(seek_start + (index * sizeof(Value) + sizeof(VectorHeader)), std::ios::beg);
             file.read(reinterpret_cast<char *>(buffer), sizeof(Value) * buffer_size);
 
             return HATESQL_SUCCESS;
@@ -342,7 +348,7 @@ namespace HateSQL
                 return HATESQL_VECTOR_INVALID_BUFFER_SIZE_PASSED;
             }
 
-            file.seekp(index * sizeof(Value) + sizeof(VectorHeader), std::ios::beg);
+            file.seekp(seek_start + (index * sizeof(Value) + sizeof(VectorHeader)), std::ios::beg);
             file.write(reinterpret_cast<const char *>(values), sizeof(Value) * values_len);
 
 
