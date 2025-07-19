@@ -10,6 +10,8 @@ namespace HateSQL {
         HATESQL_DYN_VECTOR_DATA_FILE_NOT_OPEN = -22,
         HATESQL_DYN_VECTOR_META_DATA_FILE_NOT_OPEN = -23,
         HATESQL_DYN_VECTOR_INVALID_VALUE_SIZE_PASSED = -24,
+        HATESQL_DYN_VECTOR_NOT_POSSIBLE_TO_APPEND = -25,
+        HATESQL_DYN_VECTOR_INVALID_OFFSET_OR_VALUE_SIZE_PASSED = -26,
     };
 
     struct DynVectorData {
@@ -81,6 +83,54 @@ namespace HateSQL {
 
         void set_data_file_seek_start(const size_t& seek_start) {
             data_file_seek_start = seek_start;
+        }
+
+        // only possible on last index inserted or pushed back for now ! it appends the data at end of the prev passed data .
+        int write_chunk_to(const Key& index , const void* value , const size_t& value_size) {
+            DynVectorData data;
+            int result = meta_data->get(index , data);
+
+            if (result != HATESQL_SUCCESS) {
+                return result;
+            }
+
+            size_t data_final_index = data_file_seek_start + data.start_index + data.len;
+            data_file.seekp(0 , std::ios::end);
+
+            if (data_final_index < data_file.tellp()) {
+                return HATESQL_DYN_VECTOR_NOT_POSSIBLE_TO_APPEND;
+            }
+
+            data_file.write(reinterpret_cast<const char*>(value) , value_size);
+            data.len += value_size;
+
+            result = meta_data->set(index , data);
+
+            return result;
+        }
+
+        int read_chunk_from(
+            const Key& index 
+            , void* value 
+            , const size_t& offset_in_index
+            , const size_t& value_size
+        ) {
+            
+            DynVectorData data;
+            int result = meta_data->get(index , data);
+
+            if (result != HATESQL_SUCCESS) {
+                return result;
+            }
+
+            if (data.start_index + data.len < data.start_index + offset_in_index + value_size) {
+                return HATESQL_DYN_VECTOR_INVALID_OFFSET_OR_VALUE_SIZE_PASSED;
+            }
+            
+            data_file.seekg(data_file_seek_start + data.start_index + offset_in_index , std::ios::beg);
+            data_file.read(reinterpret_cast<char *>(value) , value_size);
+
+            return HATESQL_SUCCESS;
         }
 
         int open(const std::string& meta_file_path , const std::string& data_file_path) {
