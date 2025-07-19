@@ -287,6 +287,18 @@ namespace HateSQL {
             meta_data->clear();
         }
 
+        int is_open() {
+            if (!meta_data->is_open()) {
+                return HATESQL_DYN_VECTOR_META_DATA_FILE_NOT_OPEN;
+            }
+
+            if (!data_file.is_open()) {
+                return HATESQL_DYN_VECTOR_DATA_FILE_NOT_OPEN;
+            }
+
+            return HATESQL_SUCCESS;
+        }
+
         size_t size() {
             return meta_data->size();
         }
